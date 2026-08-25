@@ -1,9 +1,9 @@
 {
-  "name": "docs/security",
-  "title": "security",
+  "name": "docs/https",
+  "title": "https",
   "template": "templates/template.html",
-  "content": "content/docs/security.html",
-  "output": "public/docs/security.html",
+  "content": "content/docs/https.html",
+  "output": "public/docs/https.html",
   "minify": false,
   "minify-version": 0,
   "pagination": false,
@@ -12,7 +12,7 @@
   "pagination-separator": "",
   "pagination-pages": 0,
   "dependencies": [
-    "content/docs/security.html",
+    "content/docs/https.html",
     "templates/head.html",
     "templates/nav.html",
     "templates/template.html"

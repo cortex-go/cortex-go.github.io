@@ -52,6 +52,11 @@
       "name": "docs/security",
       "title": "security",
       "template": "templates/template.html"
+    },
+    {
+      "name": "docs/https",
+      "title": "https",
+      "template": "templates/template.html"
     }
   ]
 }
