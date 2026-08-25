@@ -47,6 +47,11 @@
       "title": "install",
       "content-ext": ".sh",
       "output-ext": ".sh"
+    },
+    {
+      "name": "docs/security",
+      "title": "security",
+      "template": "templates/template.html"
     }
   ]
 }
