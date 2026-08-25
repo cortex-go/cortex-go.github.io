@@ -41,6 +41,12 @@
       "name": "docs/remote",
       "title": "Remote use",
       "template": "templates/template.html"
+    },
+    {
+      "name": "install",
+      "title": "install",
+      "content-ext": ".sh",
+      "output-ext": ".sh"
     }
   ]
 }
