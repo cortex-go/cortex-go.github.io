@@ -1,0 +1,27 @@
+<main class="docs"><aside><p>Documentation</p><a href="@pathto('docs/getting-started')">Getting started</a><a href="@pathto('docs/agent')">Coding agent</a><a href="@pathto('docs/providers')">Providers & keys</a><a href="@pathto('docs/security')">Security & authentication</a><a href="@pathto('docs/remote')">Remote use</a><a href="@pathto('docs/https')">HTTPS with Caddy</a><a class="active" href="@pathto('docs/nginx')">HTTPS with nginx</a></aside><article><p class="eyebrow">DOCS · DEPLOYMENT</p><h1>Serve Cortex over HTTPS with nginx</h1><p>If nginx already fronts services on your server, Cortex can sit behind it cleanly. Keep Cortex bound to <code>127.0.0.1:7331</code>, terminate TLS at nginx, and forward the original host and scheme to Cortex.</p><h2>Reverse proxy</h2><pre><code>server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name cortex.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/cortex.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/cortex.example.com/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:7331;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_read_timeout 3600s;
+        proxy_buffering off;
+    }
+}</code></pre><p>The forwarded scheme matters for secure Cortex session cookies and Google OAuth callback URLs. Cortex accepts <code>X-Forwarded-Proto</code> only when the direct peer is loopback, so a remote client cannot simply spoof that header when Cortex is exposed directly.</p><h2>HTTP redirect</h2><pre><code>server {
+    listen 80;
+    listen [::]:80;
+    server_name cortex.example.com;
+    return 301 https://$host$request_uri;
+}</code></pre><p>Use your normal certificate workflow, such as Certbot, to provision and renew the certificate. Test the nginx configuration before reloading it.</p><h2>Long-running agent requests</h2><p>Cortex streams agent activity while work is running. The configuration above disables proxy response buffering and gives long-running requests a generous read timeout so the proxy does not make an active coding session appear stalled or terminate it prematurely.</p><div class="warning"><strong>Keep the backend private.</strong><span>The recommended setup leaves Cortex on its default loopback listener and exposes only nginx on ports 80 and 443. Cortex is a high-authority development service; do not unnecessarily publish port 7331 alongside the reverse proxy.</span></div><h2>WebSockets</h2><p>The Upgrade and Connection headers are included for proxy compatibility with WebSocket endpoints. nginx does not forward these hop-by-hop headers automatically, so they must be supplied explicitly when WebSocket tunnelling is needed.</p><h2>More about nginx</h2><p>See the nginx documentation for <a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html">HTTP proxying</a> and <a href="https://nginx.org/en/docs/http/websocket.html">WebSocket proxying</a>.</p></article></main>

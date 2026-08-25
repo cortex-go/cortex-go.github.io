@@ -1,9 +1,9 @@
 {
-  "name": "docs/providers",
-  "title": "Providers & API keys",
+  "name": "docs/nginx",
+  "title": "nginx",
   "template": "templates/template.html",
-  "content": "content/docs/providers.html",
-  "output": "public/docs/providers.html",
+  "content": "content/docs/nginx.html",
+  "output": "public/docs/nginx.html",
   "minify": false,
   "minify-version": 0,
   "pagination": false,
@@ -12,7 +12,7 @@
   "pagination-separator": "",
   "pagination-pages": 0,
   "dependencies": [
-    "content/docs/providers.html",
+    "content/docs/nginx.html",
     "templates/head.html",
     "templates/nav.html",
     "templates/template.html"
