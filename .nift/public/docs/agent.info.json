@@ -1,0 +1,30 @@
+{
+  "name": "docs/agent",
+  "title": "Coding agent",
+  "template": "templates/template.html",
+  "content": "content/docs/agent.html",
+  "output": "public/docs/agent.html",
+  "minify": false,
+  "minify-version": 0,
+  "pagination": false,
+  "pagination-items-per-page": 0,
+  "pagination-template": "",
+  "pagination-separator": "",
+  "pagination-pages": 0,
+  "dependencies": [
+    "content/docs/agent.html",
+    "templates/head.html",
+    "templates/nav.html",
+    "templates/template.html"
+  ],
+  "reqs": [
+    "public/assets/css/style.css",
+    "public/assets/js/script.js",
+    "public/docs.html",
+    "public/docs/agent.html",
+    "public/docs/getting-started.html",
+    "public/docs/providers.html",
+    "public/docs/remote.html",
+    "public/index.html"
+  ]
+}

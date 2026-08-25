@@ -1,0 +1,46 @@
+{
+  "tracked": [
+    {
+      "name": "/",
+      "title": "index",
+      "template": "templates/template.html"
+    },
+    {
+      "name": "assets/css/style",
+      "title": "style",
+      "content-ext": ".css",
+      "output-ext": ".css"
+    },
+    {
+      "name": "assets/js/script",
+      "title": "script",
+      "content-ext": ".js",
+      "output-ext": ".js"
+    },
+    {
+      "name": "docs",
+      "title": "Docs",
+      "template": "templates/template.html"
+    },
+    {
+      "name": "docs/getting-started",
+      "title": "Getting started",
+      "template": "templates/template.html"
+    },
+    {
+      "name": "docs/agent",
+      "title": "Coding agent",
+      "template": "templates/template.html"
+    },
+    {
+      "name": "docs/providers",
+      "title": "Providers & API keys",
+      "template": "templates/template.html"
+    },
+    {
+      "name": "docs/remote",
+      "title": "Remote use",
+      "template": "templates/template.html"
+    }
+  ]
+}
