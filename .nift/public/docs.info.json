@@ -25,6 +25,7 @@
     "public/docs/getting-started.html",
     "public/docs/https.html",
     "public/docs/nginx.html",
+    "public/docs/persistence.html",
     "public/docs/providers.html",
     "public/docs/remote.html",
     "public/docs/security.html",

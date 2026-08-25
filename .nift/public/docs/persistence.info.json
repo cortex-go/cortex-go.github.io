@@ -1,9 +1,9 @@
 {
-  "name": "docs/agent",
-  "title": "Coding agent",
+  "name": "docs/persistence",
+  "title": "persistence",
   "template": "templates/template.html",
-  "content": "content/docs/agent.html",
-  "output": "public/docs/agent.html",
+  "content": "content/docs/persistence.html",
+  "output": "public/docs/persistence.html",
   "minify": false,
   "minify-version": 0,
   "pagination": false,
@@ -12,7 +12,7 @@
   "pagination-separator": "",
   "pagination-pages": 0,
   "dependencies": [
-    "content/docs/agent.html",
+    "content/docs/persistence.html",
     "templates/head.html",
     "templates/nav.html",
     "templates/template.html"
