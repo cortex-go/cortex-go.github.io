@@ -1,4 +1,6 @@
-<main class="docs">@input("templates/docs-nav.html")<article><p class="eyebrow">DOCS · DEPLOYMENT</p><h1>Serve Cortex over HTTPS with nginx</h1><p>If nginx already fronts services on your server, Cortex can sit behind it cleanly. Keep Cortex bound to <code>127.0.0.1:7331</code>, terminate TLS at nginx, and forward the original host and scheme to Cortex.</p><h2>Reverse proxy</h2><pre><code>server {
+<main class="docs">@input("templates/docs-nav.html")<article><p class="eyebrow">DOCS · DEPLOYMENT</p><h1>Serve Cortex over HTTPS with nginx</h1><p>If nginx already fronts services on your server, Cortex can sit behind it cleanly. Keep Cortex bound to <code>127.0.0.1:7331</code>, terminate TLS at nginx, and forward the original host and scheme to Cortex.</p><h2>Start Cortex in explicit proxy mode</h2><pre><code>cortex --listen 127.0.0.1:7331 \
+  --trust-proxy \
+  --public-origin https://cortex.example.com</code></pre><h2>Reverse proxy</h2><pre><code>server {
     listen 443 ssl;
     listen [::]:443 ssl;
     server_name cortex.example.com;
@@ -19,7 +21,7 @@
         proxy_read_timeout 3600s;
         proxy_buffering off;
     }
-}</code></pre><p>The forwarded scheme matters for secure Cortex session cookies and Google OAuth callback URLs. Cortex accepts <code>X-Forwarded-Proto</code> only when the direct peer is loopback, so a remote client cannot simply spoof that header when Cortex is exposed directly.</p><h2>HTTP redirect</h2><pre><code>server {
+}</code></pre><p>The forwarded scheme matters for secure Cortex session cookies and Google OAuth callback URLs. Cortex ignores forwarding headers by default. In explicit proxy mode it accepts a single forwarded scheme and client address only from its direct loopback peer; remote peers and ambiguous chains fail closed. The configured public origin pins Host, secure-cookie, OAuth callback and same-origin behavior.</p><h2>HTTP redirect</h2><pre><code>server {
     listen 80;
     listen [::]:80;
     server_name cortex.example.com;
