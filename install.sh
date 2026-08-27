@@ -75,10 +75,18 @@ tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT INT TERM
 
 echo "Downloading ${asset}..."
-curl -fL "$url" -o "$tmp/$asset"
+curl --proto '=https' --tlsv1.2 -fL "$url" -o "$tmp/$asset"
+curl --proto '=https' --tlsv1.2 -fL "https://github.com/${repo}/releases/latest/download/checksums.txt" -o "$tmp/checksums.txt"
+expected="$(awk -v file="$asset" '$2 == file || $2 == "*" file {print $1}' "$tmp/checksums.txt")"
+if [ -z "$expected" ]; then echo "Cortex installer: checksum missing for $asset" >&2; exit 1; fi
+if command -v sha256sum >/dev/null 2>&1; then actual="$(sha256sum "$tmp/$asset" | awk '{print $1}')"; else actual="$(shasum -a 256 "$tmp/$asset" | awk '{print $1}')"; fi
+if [ "$actual" != "$expected" ]; then echo "Cortex installer: checksum mismatch for $asset" >&2; exit 1; fi
 tar -xzf "$tmp/$asset" -C "$tmp" cortex
 mkdir -p "$install_dir"
-install -m 0755 "$tmp/cortex" "$install_dir/cortex"
+stage="$install_dir/.cortex.install.$$"
+trap 'rm -rf "$tmp"; rm -f "$stage"' EXIT INT TERM
+install -m 0755 "$tmp/cortex" "$stage"
+mv -f "$stage" "$install_dir/cortex"
 
 echo "Installed Cortex to $install_dir/cortex"
 
