@@ -7,3 +7,27 @@
 .copy-code:hover{border-color:#526159;color:var(--text)}
 .install-card .copy-code{top:7px}
 .docs article pre{padding-right:68px}
+
+/* Page-aware, independently scrolling documentation navigation. */
+.docs-nav{position:sticky;top:24px;align-self:start;display:block!important;max-height:calc(100vh - 48px);overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:12px}
+.docs-nav>p{margin-bottom:12px!important}
+.docs-nav-group{border-top:1px solid var(--line)}
+.docs-nav-group:last-child{border-bottom:1px solid var(--line)}
+.docs-nav-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:40px;padding:0;border:0;background:transparent;color:#9ba6a0;text-align:left;font:700 9px var(--mono);letter-spacing:.11em;text-transform:uppercase;cursor:pointer}
+.docs-nav-toggle:hover{color:var(--text)}
+.docs-nav-toggle i{position:relative;flex:0 0 12px;width:12px;height:12px}
+.docs-nav-toggle i::before,.docs-nav-toggle i::after{content:"";position:absolute;background:currentColor}
+.docs-nav-toggle i::before{left:1px;right:1px;top:5px;height:1px}
+.docs-nav-toggle i::after{top:1px;bottom:1px;left:5px;width:1px}
+.docs-nav-toggle[aria-expanded="true"] i::after{display:none}
+.docs-nav-links{display:grid;gap:1px;padding:0 0 9px}
+.docs-nav-links[hidden]{display:none}
+.docs-nav .docs-nav-links a{display:block;padding:5px 8px;border-radius:5px;color:#89958e;font-size:12px}
+.docs-nav .docs-nav-links a:hover{background:#171c19;color:var(--text)}
+.docs-nav .docs-nav-links a.active{background:#1d221f;color:var(--text);font-weight:700}
+.evidence-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:28px 0 36px}
+.evidence-grid article{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:13px 14px;border:1px solid var(--line);border-radius:7px;background:#121513}
+.evidence-grid span,.evidence-grid small{font:9px var(--mono);color:var(--muted)}
+.evidence-grid strong{font-size:12px}
+@media(max-width:760px){.docs-nav{position:static;max-height:none;overflow:visible;padding:14px;border:1px solid var(--line);border-radius:8px}.docs-nav-links{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.evidence-grid{grid-template-columns:1fr}}
+@media(max-width:460px){.docs-nav-links{grid-template-columns:1fr}}
