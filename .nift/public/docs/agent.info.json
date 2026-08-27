@@ -13,6 +13,7 @@
   "pagination-pages": 0,
   "dependencies": [
     "content/docs/agent.html",
+    "templates/docs-nav.html",
     "templates/head.html",
     "templates/nav.html",
     "templates/template.html"
@@ -22,6 +23,7 @@
     "public/assets/js/script.js",
     "public/docs.html",
     "public/docs/agent.html",
+    "public/docs/battle-tested.html",
     "public/docs/getting-started.html",
     "public/docs/https.html",
     "public/docs/nginx.html",

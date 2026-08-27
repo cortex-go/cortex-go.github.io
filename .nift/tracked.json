@@ -67,6 +67,11 @@
       "name": "docs/persistence",
       "title": "persistence",
       "template": "templates/template.html"
+    },
+    {
+      "name": "docs/battle-tested",
+      "title": "Battle Tested",
+      "template": "templates/template.html"
     }
   ]
 }
