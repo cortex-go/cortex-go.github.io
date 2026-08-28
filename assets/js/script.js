@@ -13,8 +13,8 @@ function cortexNormaliseDocsPath(value){
   return path.replace(/\/index\.html$/,'').replace(/\.html$/,'').replace(/\/$/,'')||'/';
 }
 
-function cortexInitDocsNav(){
-  const groups=[...document.querySelectorAll('[data-docs-group]')];
+function cortexWireDocs(root){
+  const groups=[...root.querySelectorAll('[data-docs-group]')];
   if(!groups.length)return;
   const currentPath=cortexNormaliseDocsPath(location.href);
   const setOpen=(group,open)=>{
@@ -24,7 +24,7 @@ function cortexInitDocsNav(){
     links.hidden=!open;
   };
   let activeGroup=null;
-  document.querySelectorAll('.docs-nav a').forEach(link=>{
+  root.querySelectorAll('.docs-nav-links a').forEach(link=>{
     const active=cortexNormaliseDocsPath(link.href)===currentPath;
     link.classList.toggle('active',active);
     if(active){link.setAttribute('aria-current','page');activeGroup=link.closest('[data-docs-group]')}
@@ -35,6 +35,10 @@ function cortexInitDocsNav(){
       setOpen(group,group.querySelector('.docs-nav-toggle').getAttribute('aria-expanded')!=='true');
     });
   });
+}
+function cortexInitDocsNav(){
+  const aside=document.querySelector('.docs-nav');
+  if(aside)cortexWireDocs(aside);
 }
 function cortexInitMobileMenu(){
   const toggle=document.querySelector('[data-menu-toggle]');
@@ -71,9 +75,22 @@ function cortexInitMobileMenu(){
   if(source&&target){
     source.querySelectorAll('[data-docs-group]').forEach(group=>{
       const heading=group.querySelector('.docs-nav-toggle span')?.textContent||'';
-      const links=[...group.querySelectorAll('.docs-nav-links a')].map(a=>a.outerHTML).join('');
-      if(heading)target.insertAdjacentHTML('beforeend',`<p class="mobile-docs-heading">${heading}</p>${links}`);
+      if(!heading)return;
+      const section=document.createElement('section');
+      section.className='docs-nav-group';
+      section.setAttribute('data-docs-group','');
+      const btn=document.createElement('button');
+      btn.type='button';btn.className='docs-nav-toggle';btn.setAttribute('aria-expanded','false');
+      const label=document.createElement('span');label.textContent=heading;
+      const icon=document.createElement('i');icon.setAttribute('aria-hidden','true');
+      btn.append(label,icon);
+      const links=document.createElement('div');
+      links.className='docs-nav-links';links.hidden=true;
+      links.innerHTML=[...group.querySelectorAll('.docs-nav-links a')].map(a=>a.outerHTML).join('');
+      section.append(btn,links);
+      target.append(section);
     });
+    cortexWireDocs(target);
   }
 }
 document.addEventListener('DOMContentLoaded',()=>{
