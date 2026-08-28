@@ -13,8 +13,8 @@ function cortexNormaliseDocsPath(value){
   return path.replace(/\/index\.html$/,'').replace(/\.html$/,'').replace(/\/$/,'')||'/';
 }
 
-function cortexInitDocsNav(){
-  const groups=[...document.querySelectorAll('[data-docs-group]')];
+function cortexWireDocs(root){
+  const groups=[...root.querySelectorAll('[data-docs-group]')];
   if(!groups.length)return;
   const currentPath=cortexNormaliseDocsPath(location.href);
   const setOpen=(group,open)=>{
@@ -24,7 +24,7 @@ function cortexInitDocsNav(){
     links.hidden=!open;
   };
   let activeGroup=null;
-  document.querySelectorAll('.docs-nav a').forEach(link=>{
+  root.querySelectorAll('.docs-nav-links a').forEach(link=>{
     const active=cortexNormaliseDocsPath(link.href)===currentPath;
     link.classList.toggle('active',active);
     if(active){link.setAttribute('aria-current','page');activeGroup=link.closest('[data-docs-group]')}
@@ -36,27 +36,61 @@ function cortexInitDocsNav(){
     });
   });
 }
+function cortexInitDocsNav(){
+  const aside=document.querySelector('.docs-nav');
+  if(aside)cortexWireDocs(aside);
+}
 function cortexInitMobileMenu(){
-  const toggle=document.querySelector('.menu-toggle');
+  const toggle=document.querySelector('[data-menu-toggle]');
   const menu=document.getElementById('mobile-menu');
-  if(!toggle||!menu)return;
-  const setOpen=open=>{
-    menu.classList.toggle('open',open);
-    toggle.setAttribute('aria-expanded',String(open));
-    toggle.setAttribute('aria-label',open?'Close navigation':'Open navigation');
-    document.body.style.overflow=open?'hidden':'';
+  const docsToggle=document.querySelector('[data-docs-menu-toggle]');
+  const docsMenu=document.getElementById('docs-mobile-nav');
+  const setMenu=(panel,btn,open)=>{
+    panel.classList.toggle('open',open);
+    panel.toggleAttribute('hidden',!open);
+    btn.setAttribute('aria-expanded',String(open));
+    btn.setAttribute('aria-label',open?'Close navigation':'Open navigation');
   };
-  toggle.addEventListener('click',()=>setOpen(!menu.classList.contains('open')));
-  menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>setOpen(false)));
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&menu.classList.contains('open')){setOpen(false);toggle.focus()}});
+  if(toggle&&menu){
+    toggle.addEventListener('click',()=>{
+      const open=!menu.classList.contains('open');
+      if(open&&docsMenu&&docsMenu.classList.contains('open'))setMenu(docsMenu,docsToggle,false);
+      setMenu(menu,toggle,open);
+      document.body.style.overflow=open?'hidden':'';
+    });
+    menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{setMenu(menu,toggle,false);document.body.style.overflow=''}));
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&menu.classList.contains('open')){setMenu(menu,toggle,false);document.body.style.overflow='';toggle.focus()}});
+  }
+  if(docsToggle&&docsMenu){
+    docsToggle.addEventListener('click',()=>{
+      const open=!docsMenu.classList.contains('open');
+      if(open&&menu&&menu.classList.contains('open')){setMenu(menu,toggle,false);document.body.style.overflow=''}
+      setMenu(docsMenu,docsToggle,open);
+    });
+    docsMenu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>setMenu(docsMenu,docsToggle,false)));
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&docsMenu.classList.contains('open')){setMenu(docsMenu,docsToggle,false);docsToggle.focus()}});
+  }
   const source=document.querySelector('.docs-nav');
-  const target=document.querySelector('[data-mobile-docs]');
+  const target=document.querySelector('[data-docs-mobile-nav]');
   if(source&&target){
     source.querySelectorAll('[data-docs-group]').forEach(group=>{
       const heading=group.querySelector('.docs-nav-toggle span')?.textContent||'';
-      const links=[...group.querySelectorAll('.docs-nav-links a')].map(a=>a.outerHTML).join('');
-      if(heading)target.insertAdjacentHTML('beforeend',`<p class="mobile-docs-heading">${heading}</p>${links}`);
+      if(!heading)return;
+      const section=document.createElement('section');
+      section.className='docs-nav-group';
+      section.setAttribute('data-docs-group','');
+      const btn=document.createElement('button');
+      btn.type='button';btn.className='docs-nav-toggle';btn.setAttribute('aria-expanded','false');
+      const label=document.createElement('span');label.textContent=heading;
+      const icon=document.createElement('i');icon.setAttribute('aria-hidden','true');
+      btn.append(label,icon);
+      const links=document.createElement('div');
+      links.className='docs-nav-links';links.hidden=true;
+      links.innerHTML=[...group.querySelectorAll('.docs-nav-links a')].map(a=>a.outerHTML).join('');
+      section.append(btn,links);
+      target.append(section);
     });
+    cortexWireDocs(target);
   }
 }
 document.addEventListener('DOMContentLoaded',()=>{
