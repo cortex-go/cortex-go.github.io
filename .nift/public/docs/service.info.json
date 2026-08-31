@@ -1,9 +1,9 @@
 {
-  "name": "docs/battle-tested",
-  "title": "Battle Tested",
+  "name": "docs/service",
+  "title": "Systemd service",
   "template": "templates/template.html",
-  "content": "content/docs/battle-tested.html",
-  "output": "public/docs/battle-tested.html",
+  "content": "content/docs/service.html",
+  "output": "public/docs/service.html",
   "minify": false,
   "minify-version": 0,
   "pagination": false,
@@ -12,7 +12,7 @@
   "pagination-separator": "",
   "pagination-pages": 0,
   "dependencies": [
-    "content/docs/battle-tested.html",
+    "content/docs/service.html",
     "templates/docs-nav.html",
     "templates/head.html",
     "templates/nav.html",

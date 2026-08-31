@@ -31,6 +31,7 @@
     "public/docs/providers.html",
     "public/docs/remote.html",
     "public/docs/security.html",
+    "public/docs/service.html",
     "public/index.html"
   ]
 }

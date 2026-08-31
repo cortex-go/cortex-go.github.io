@@ -1,0 +1,18 @@
+<main class="docs">@input("templates/docs-nav.html")<article><p class="eyebrow">DOCS · DEPLOYMENT</p><h1>Run Cortex as a systemd user service</h1><p>Cortex runs in the foreground with <code>cortex</code> or <code>cortex serve</code>. To keep it running without a terminal, install a per-OS-user systemd unit with <code>cortex service</code>.</p>
+<h2>Commands</h2>
+<pre><code>cortex service install            # --listen, --root, --data, --public-origin, --trust-proxy accepted
+cortex service start
+cortex service stop
+cortex service restart
+cortex service status
+cortex service logs
+cortex service logs --follow
+cortex service uninstall</code></pre>
+<p>The user unit is written to <code>~/.config/systemd/user/cortex.service</code> and managed with <code>systemctl --user</code> and <code>journalctl --user-unit cortex.service</code>.</p>
+<h2>Install behavior</h2>
+<p><code>service install</code> resolves the executable to a stable absolute path, refuses empty, relative or transient paths, writes the unit atomically with a versioned integrity header, reloads systemd, and enables and starts the service. An existing unit that is not managed by Cortex is never overwritten or removed silently, and lifecycle commands refuse to operate on a foreign or hand-modified unit. <code>status</code> reports enabled/running state, PID, version, listen address and a live health check of the public <code>GET /api/health</code> endpoint (a minimal <code>{"ok":true}</code> JSON response; the richer <code>/api/status</code> endpoint stays behind browser authentication), and exits nonzero when the service is failed or missing. <code>uninstall</code> preserves all Cortex configuration, conversations and data.</p>
+<h2>GitHub CLI authentication</h2>
+<p>Running <code>cortex</code> from your login shell inherits your session environment, so <code>gh auth status</code> and other CLI tools work exactly as in your shell, including the GitHub token in your login keyring. A systemd user unit starts with a minimal environment, so the unit records <code>HOME</code> and, when <code>~/.config/gh/hosts.yml</code> exists, <code>GH_CONFIG_DIR</code> — Cortex and its agent subprocesses then keep using your GitHub CLI authentication without copying any file or token. Because a user service runs inside your user session it can still reach your login keyring; if that keyring is locked, run <code>gh auth login</code> once in the session first. A future system-wide service would run under a dedicated account with no login keyring and would need <code>gh auth login</code> for that account or an explicit token in its environment.</p>
+<h2>User-service limitation</h2>
+<p><code>cortex service</code> manages a <strong>per-OS-user</strong> systemd service. System-wide mode (<code>cortex service install --system</code>) is a documented follow-up and is not yet supported. OpenCode's own configuration and session data remain isolated in per-run temporary directories.</p>
+</article></main>

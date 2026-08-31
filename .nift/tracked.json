@@ -72,6 +72,11 @@
       "name": "docs/battle-tested",
       "title": "Battle Tested",
       "template": "templates/template.html"
+    },
+    {
+      "name": "docs/service",
+      "title": "Systemd service",
+      "template": "templates/template.html"
     }
   ]
 }
