@@ -77,6 +77,11 @@
       "name": "docs/service",
       "title": "Systemd service",
       "template": "templates/template.html"
+    },
+    {
+      "name": "docs/deploy",
+      "title": "Subdomain deployment",
+      "template": "templates/template.html"
     }
   ]
 }

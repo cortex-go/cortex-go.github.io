@@ -1,0 +1,115 @@
+<main class="docs">@input("templates/docs-nav.html")<article><p class="eyebrow">DOCS · DEPLOYMENT</p><h1>Deploy Cortex on a company subdomain</h1><p>This guide deploys one Cortex instance for a team behind a company hostname such as <code>cortex.company.com</code>. It is self-contained: you do not need to install Warden, Trestle or Watchpost to use it. Cortex, Warden, Trestle and Watchpost can be deployed together on sibling subdomains, and every project also works independently. Sharing a parent domain creates no implicit trust or shared authentication — credentials, cookies, databases, service accounts and authorization remain separate per application. Use one distinct hostname per application (for example <code>cortex.company.com</code> rather than <code>company.com/cortex</code>), because independent subdomains simplify proxying, cookie scope, origins, upgrades and operational isolation.</p><div class="warning"><strong>Ecosystem map.</strong><span><code>cortex.company.com</code> is the coding agent, <code>warden.company.com</code> the browser IDE and agent, <code>trestle.company.com</code> the backend platform, and <code>watchpost.company.com</code> the monitoring control plane. Deploy only the projects you need.</span></div>
+<h2>Recommended topology</h2>
+<pre><code>Internet or company network
+        |
+        v
+DNS hostname (cortex.company.com)
+        |
+        v
+Caddy or nginx with HTTPS (TLS termination, hostname routing)
+        |
+        v
+127.0.0.1:7331
+        |
+        v
+systemd user service (cortex.service)</code></pre>
+<p>Cortex listens on loopback by default. The reverse proxy owns the externally reachable hostname and TLS termination; Cortex itself stays bound to <code>127.0.0.1</code> unless your documented security model requires otherwise.</p>
+<h2>1. Choose the hostname</h2>
+<p>Pick a stable internal or public name. <code>cortex.company.com</code> is used throughout this guide.</p>
+<h2>2. Create the DNS record</h2>
+<p>With a fixed public IP, create an A record (and an AAAA record with the IPv6 address where applicable):</p>
+<pre><code>Type: A
+Name: cortex
+Value: 203.0.113.10</code></pre>
+<p>When the hostname should point at another hostname instead, use a CNAME:</p>
+<pre><code>Type: CNAME
+Name: cortex
+Value: apps.company.com</code></pre>
+<p>DNS only maps the hostname. It does not select the application port, provide HTTPS, or secure the service — Caddy or nginx performs hostname routing and TLS termination. Private deployments do not require public DNS: split-horizon DNS, internal DNS and VPN-only hostnames are valid and often preferable.</p>
+<h2>3. Install the Cortex binary</h2>
+<p>Place the binary at a stable absolute path. A <code>Downloads</code> directory is disposable and will break the unit; install deliberately, for example:</p>
+<pre><code>mkdir -p /opt/cortex
+install -m 0755 cortex /opt/cortex/cortex</code></pre>
+<p>or use the official installer, which installs to <code>~/.local/bin</code> by default:</p>
+<pre><code>curl -fsSL https://cortex-go.github.io/install.sh | sh</code></pre>
+<h2>4. Install the service unit</h2>
+<p>Keep the listener on loopback, pin the external origin, and trust only the direct loopback reverse proxy:</p>
+<pre><code>cortex service install \
+  --listen 127.0.0.1:7331 \
+  --root /srv/cortex-workspaces \
+  --data /var/lib/cortex \
+  --public-origin https://cortex.company.com \
+  --trust-proxy</code></pre>
+<p><code>--trust-proxy</code> accepts forwarding headers only from Cortex's direct loopback peer (the proxy on the same host). <code>--public-origin</code> pins the canonical external origin for <code>Host</code> and same-origin checks. Do not enable proxy trust when clients can connect directly to the Cortex HTTP port. The unit records an absolute executable path; moving or deleting the binary breaks the service until you reinstall.</p>
+<h2>5. Keep the listener on loopback</h2>
+<p>The <code>--listen 127.0.0.1:7331</code> flag keeps Cortex private. Only the reverse proxy, which runs on the same host, reaches it. Browser authentication remains mandatory even behind the proxy: after first-run password setup, every request requires a session cookie, with optional TOTP and Google sign-in.</p>
+<h2>6. External origin and trusted proxy</h2>
+<p>These are already set by the flags above. <code>--public-origin</code> makes cookies and same-origin checks use <code>https://cortex.company.com</code>, and <code>--trust-proxy</code> makes the backend honour forwarding headers only from <code>127.0.0.1</code>. The proxy must replace (not blindly forward) browser-supplied <code>X-Forwarded-*</code> headers.</p>
+<h2>7. Configure Caddy</h2>
+<pre><code>cortex.company.com {
+    reverse_proxy 127.0.0.1:7331
+}</code></pre>
+<p>Add this when the backend must see the forwarded peer and scheme:</p>
+<pre><code>cortex.company.com {
+    reverse_proxy 127.0.0.1:7331 {
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+    request_body {
+        max_size 100MB
+    }
+}</code></pre>
+<p>Coding-agent responses stream as Server-Sent Events, so do not buffer them; Caddy proxies streaming responses natively. Caddy's automatic HTTPS requires working public DNS and a reachable ACME challenge path. For private networks, use an internal certificate or your company PKI instead of presenting a development certificate as publicly trusted.</p>
+<h2>8. Configure nginx as an alternative</h2>
+<pre><code>server {
+    listen 80;
+    server_name cortex.company.com;
+    return 301 https://cortex.company.com$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name cortex.company.com;
+
+    ssl_certificate     /etc/letsencrypt/live/cortex.company.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/cortex.company.com/privkey.pem;
+
+    client_max_body_size 100m;
+
+    location / {
+        proxy_pass http://127.0.0.1:7331;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+}</code></pre>
+<p>Obtain the certificate with Certbot or your company PKI before starting nginx. The proxy deliberately replaces <code>X-Forwarded-*</code> from <code>$remote_addr</code> rather than trusting a client-supplied header. <code>proxy_buffering off</code> keeps the streaming agent output flowing, and the long read timeout accommodates long-running agent sessions. The request body limit covers attached images (Cortex caps each image at 10 MiB and six per run).</p>
+<h2>9. Obtain and verify HTTPS</h2>
+<pre><code>curl -I https://cortex.company.com</code></pre>
+<p>Confirm the certificate is issued for the hostname and the TLS handshake completes.</p>
+<h2>10. Verify the public health endpoint</h2>
+<pre><code>curl -s https://cortex.company.com/api/health</code></pre>
+<p>Expect <code>{"ok":true}</code>. <code>/api/health</code> is the public, read-only liveness endpoint; the richer <code>/api/status</code> stays behind browser authentication.</p>
+<h2>11. Open the application and complete first-run setup</h2>
+<p>Open <code>https://cortex.company.com</code>, set a password (and optionally TOTP or Google sign-in), then configure a provider and model in Settings. For ChatGPT Plus/Pro or GitHub Copilot, authenticate OpenCode once on the Cortex host (<code>opencode auth login --provider openai</code> or <code>github-copilot</code>) so the service can copy the credential into isolated sessions.</p>
+<h2>12. Configure lingering for unattended boot</h2>
+<pre><code>loginctl show-user "$USER" -p Linger
+loginctl enable-linger "$USER"</code></pre>
+<p>Cortex never enables lingering automatically. Enable it only when the service must run after logout or start before login; it changes what the host runs without a login session.</p>
+<h2>13. Verify service status and logs</h2>
+<pre><code>cortex service status
+cortex service logs</code></pre>
+<p><code>status</code> reports enabled/running state, PID, version, listen address and a live health check, and exits nonzero when the service is failed or missing.</p>
+<h2>14. Troubleshoot</h2>
+<ul><li><strong>DNS</strong> — the hostname resolves but nothing loads: confirm the A/AAAA or CNAME points at the proxy host and that internal DNS (not public DNS) is the right place for VPN-only names.</li>
+<li><strong>TLS</strong> — certificate warnings: automatic HTTPS needs public DNS and reachable ACME paths; internal deployments need a company PKI/internal CA.</li>
+<li><strong>Proxy</strong> — reverse proxy connects but gets 400/425 or a cookie failure: the proxy must replace forwarding headers, and <code>--trust-proxy</code> must be enabled only when the proxy is the direct loopback peer.</li>
+<li><strong>Streaming</strong> — agent output appears only at the end: disable proxy buffering (nginx <code>proxy_buffering off</code>) so Server-Sent Events stream.</li>
+<li><strong>Cookies</strong> — login works on <code>127.0.0.1</code> but not through the proxy: the cookie domain and Secure flag depend on <code>--public-origin</code> matching the hostname and TLS being present.</li>
+</ul>
+<div class="warning"><strong>GitHub CLI under the service.</strong><span>A user service starts with a minimal environment. The unit records <code>HOME</code> and <code>GH_CONFIG_DIR</code> when a <code>hosts.yml</code> exists so <code>gh</code> keeps working; the token stays in your keyring and is never copied into session data.</span></div>
+</article></main>

@@ -1,9 +1,9 @@
 {
-  "name": "docs/security",
-  "title": "security",
+  "name": "docs/deploy",
+  "title": "Subdomain deployment",
   "template": "templates/template.html",
-  "content": "content/docs/security.html",
-  "output": "public/docs/security.html",
+  "content": "content/docs/deploy.html",
+  "output": "public/docs/deploy.html",
   "minify": false,
   "minify-version": 0,
   "pagination": false,
@@ -12,7 +12,7 @@
   "pagination-separator": "",
   "pagination-pages": 0,
   "dependencies": [
-    "content/docs/security.html",
+    "content/docs/deploy.html",
     "templates/docs-nav.html",
     "templates/head.html",
     "templates/nav.html",
