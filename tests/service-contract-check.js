@@ -35,6 +35,16 @@ if (/automatically enables? lingering/.test(service)) throw new Error('lingering
 if (!/rejected/.test(persistence)) throw new Error('migration docs must mention rejected records');
 if (!/preserved locally|recoverable|remain available/.test(persistence)) throw new Error('rejected transcripts must be promised preserved');
 
+// 6a. Migration docs must not contain the obsolete one-time/empty-database claim.
+for (const stale of [
+  'when the database contains no conversations',
+  'imports the existing browser-local sessions once',
+  'After that first migration, the server is authoritative',
+  'no retry when server conversations already exist',
+]) {
+  if (persistence.toLowerCase().includes(stale)) throw new Error(`stale migration claim present: ${stale}`);
+}
+
 // 7. Battle-tested page makes no unsupported live-systemd claim.
 if (/battle-proven on every supported operating system|validated against every systemd release|production-proven rollback/i.test(battle)) {
   throw new Error('battle-tested page overclaims live systemd evidence');
