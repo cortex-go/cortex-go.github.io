@@ -35,7 +35,7 @@ if (!source.includes(health)) throw new Error(`health endpoint ${health} must be
 for (const sub of ['cortex.company.com', 'warden.company.com', 'trestle.company.com', 'watchpost.company.com']) {
   if (!source.includes(sub)) throw new Error(`ecosystem map must name ${sub}`);
 }
-if (/--[a-z][a-z-]*(?![a-z-])/.test(source) && !/--(listen|root|data|public-origin|trust-proxy)/.test(source)) {
+if (/--[a-z][a-z-]*(?![a-z-])/.test(source) && !/--(host|port|listen|root|data|public-origin|trust-proxy)/.test(source)) {
   throw new Error('unsupported or missing documented flags');
 }
 for (const leftover of ['@pathto', '@input', '@include']) {
