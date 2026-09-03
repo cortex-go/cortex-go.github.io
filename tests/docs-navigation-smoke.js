@@ -1,8 +1,8 @@
 const fs=require('fs');
 
 const nav=fs.readFileSync('templates/docs-nav.html','utf8');
-const script=fs.readFileSync('content/assets/js/script.js','utf8');
-const style=fs.readFileSync('content/assets/css/style.css','utf8');
+const script=fs.readFileSync('public/assets/js/script.js','utf8');
+const style=fs.readFileSync('public/assets/css/style.css','utf8');
 const tracked=JSON.parse(fs.readFileSync('.nift/tracked.json','utf8')).tracked;
 const groups=[...nav.matchAll(/data-docs-group/g)];
 const routes=[...nav.matchAll(/@pathto\('([^']+)'\)/g)].map(match=>match[1]);

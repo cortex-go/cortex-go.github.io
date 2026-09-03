@@ -1,7 +1,16 @@
-<main class="docs">@input("templates/docs-nav.html")<article><p class="eyebrow">DOCS · DEPLOYMENT</p><h1>Run Cortex as a systemd user service</h1><p>Cortex runs in the foreground with <code>cortex</code> or <code>cortex serve</code>. To keep it running without a terminal, install a per-OS-user systemd unit with <code>cortex service</code>.</p>
+<main class="docs">@input("templates/docs-nav.html")<article><p class="eyebrow">DOCS · DEPLOYMENT</p><h1>Run Cortex as a user service</h1><p>Install Cortex as a systemd user service when it should keep running after the terminal closes. The service uses your OS account and does not require <code>sudo</code>.</p>
 <h2>Commands</h2>
-<pre><code>cortex service install            # --host, --port, --root, --data, --public-origin, --trust-proxy accepted
-cortex service install --port 7401  # install on 127.0.0.1:7401
+<pre><code>cortex service install
+# Optional install flags:
+#   --host HOST
+#   --port PORT
+#   --root DIRECTORY
+#   --data DIRECTORY
+#   --public-origin URL
+#   --trust-proxy
+
+# Example: listen on 127.0.0.1:7401
+cortex service install --port 7401
 cortex service start
 cortex service stop
 cortex service restart
@@ -9,19 +18,19 @@ cortex service status
 cortex service logs
 cortex service logs --follow
 cortex service uninstall</code></pre>
-<p><code>service install</code> records the resolved host and port directly in the unit's <code>ExecStart</code>, so the selected listener survives login, restart and reboot. It accepts <code>--host</code> and <code>--port</code> (defaulting to <code>127.0.0.1:7331</code> or the current <code>CORTEX_HOST</code>/<code>CORTEX_PORT</code> values), plus the legacy single-address <code>--listen</code>.</p><p>The user unit is written to <code>~/.config/systemd/user/cortex.service</code> and managed with <code>systemctl --user</code> and <code>journalctl --user-unit cortex.service</code>.</p>
+<p>The installed unit records its listener and paths explicitly. Defaults come from <code>CORTEX_HOST</code>/<code>CORTEX_PORT</code>, then fall back to <code>127.0.0.1:7331</code>. The legacy <code>--listen</code> form remains supported.</p><p>The unit lives at <code>~/.config/systemd/user/cortex.service</code>. Cortex manages it through <code>systemctl --user</code> and reads logs through <code>journalctl --user-unit cortex.service</code>.</p>
 <h2>Install behavior</h2>
-<p><code>service install</code> resolves the executable to a stable absolute path, refuses empty, relative or transient paths, and writes the unit atomically with a versioned integrity header. An existing unit that is not managed by Cortex is never overwritten or removed silently, and lifecycle commands refuse to operate on a foreign or hand-modified unit.</p>
-<p>The install is a transaction. Cortex records the existing managed unit bytes and inspects the prior systemd enablement and activity <em>before</em> mutating anything. Only states that can be recreated exactly are accepted: enablement <code>enabled</code>, <code>enabled-runtime</code> and <code>disabled</code>, and activity <code>active</code> and <code>inactive</code>. Masked, static, linked, generated, transient, failed, reloading and other non-restorable states are refused before any file or lifecycle change — unmask or stop the service first. On a failure, rollback restores the prior unit bytes and reproduces the exact prior enablement and activity states, distinguishing persistent from runtime enablement so runtime-only enablement is restored without leaving a persistent link; a failed fresh install is stopped and disabled while the unit is still loaded, then the unit is removed and systemd is reloaded.</p>
-<p>A byte-identical unit that is already enabled and active is a genuine no-op — nothing is rewritten, reloaded or restarted. An unchanged unit that is inactive or disabled receives only the lifecycle steps needed to reach the installed state, and a changed listener, root, data path, origin or trust-proxy configuration reloads systemd and restarts the service so the new configuration takes effect. Installation never enables user lingering automatically; the service survives logout only when your user manager is allowed to run without a session (<code>loginctl enable-linger "$USER"</code>). The unit records the executable's current absolute path, so moving or deleting the binary breaks the service until you reinstall. <code>status</code> reports enabled/running state, PID, version, listen address and a live health check of the public <code>GET /api/health</code> endpoint (a minimal <code>{"ok":true}</code> JSON response; the richer <code>/api/status</code> endpoint stays behind browser authentication), and exits nonzero when the service is failed or missing. <code>uninstall</code> preserves all Cortex configuration, conversations and data.</p>
+<p><code>service install</code> writes the unit atomically and records an integrity header. It refuses unstable executable paths and will not overwrite a foreign or hand-edited unit.</p>
+<ul><li><strong>Safe reinstall:</strong> unchanged active installations are left alone; configuration changes reload and restart the service.</li><li><strong>Transactional failure:</strong> the previous unit, enablement and running state are restored. This includes <code>enabled-runtime</code>: runtime-only enablement is restored without leaving a persistent link.</li><li><strong>State protection:</strong> masked, failed, generated and other states that cannot be restored exactly are rejected before changes begin; unmask or stop the service first.</li><li><strong>Data preservation:</strong> uninstall preserves configuration, conversations and data.</li></ul>
+<p><code>status</code> reports enablement, running state, PID, version, listener and the public <code>GET /api/health</code> check. It exits nonzero when the service is missing or failed. The unit stores the executable's absolute path, so reinstall after moving the binary.</p>
 <h2>GitHub CLI authentication</h2>
-<p>Running <code>cortex</code> from your login shell inherits your session environment, so <code>gh auth status</code> and other CLI tools work exactly as in your shell, including the GitHub token in your login keyring. A systemd user unit starts with a minimal environment, so the unit records <code>HOME</code> and, when <code>~/.config/gh/hosts.yml</code> exists, <code>GH_CONFIG_DIR</code> — Cortex and its agent subprocesses then keep using your GitHub CLI authentication without copying any file or token. Because a user service runs inside your user session it can still reach your login keyring; if that keyring is locked, run <code>gh auth login</code> once in the session first. A future system-wide service would run under a dedicated account with no login keyring and would need <code>gh auth login</code> for that account or an explicit token in its environment.</p>
+<p>The unit records <code>HOME</code> and, when present, the location of <code>~/.config/gh/hosts.yml</code>. Cortex and its agents can then use your existing GitHub CLI login without copying credentials. If the desktop keyring is locked, run <code>gh auth login</code> once in your session first.</p>
 <h2>User-service limitation</h2>
 <p><code>cortex service</code> manages a <strong>per-OS-user</strong> systemd service. System-wide mode (<code>cortex service install --system</code>) is a documented follow-up and is not yet supported. OpenCode's own configuration and session data remain isolated in per-run temporary directories.</p>
 <h2>Persistence and lingering</h2>
-<p>The installed service runs independently of the terminal that launched it. Closing that terminal does not stop the service; <code>cortex service uninstall</code> (or <code>systemctl --user stop cortex.service</code>) is how you stop it deliberately. The unit belongs to your OS user's systemd user manager, so it normally starts when that manager starts — your first login or boot, depending on the distribution.</p>
+<p>Closing the terminal does not stop Cortex. Use <code>cortex service stop</code> to stop it or <code>cortex service uninstall</code> to remove the unit. It normally starts when your user manager starts.</p>
 <p>If Cortex should keep running after you log out, or start at boot before any interactive login, the user manager must be allowed to run without a session. That is what <em>lingering</em> enables:</p>
 <pre><code>loginctl show-user "$USER" -p Linger
 loginctl enable-linger "$USER"</code></pre>
-<p>Cortex never enables lingering automatically, because it changes what the host runs without a login session — enable it deliberately only when unattended operation is actually required. The recorded unit also contains the absolute executable path that was current at install time; moving or deleting that executable breaks the service until you reinstall.</p>
+<p>Cortex never enables lingering automatically. Enable it only when Cortex must run without an active login session.</p>
 </article></main>
