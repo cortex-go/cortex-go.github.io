@@ -18,8 +18,6 @@
     "templates/template.html"
   ],
   "reqs": [
-    "public/assets/css/style.css",
-    "public/assets/js/script.js",
     "public/docs.html",
     "public/docs/getting-started.html",
     "public/index.html"

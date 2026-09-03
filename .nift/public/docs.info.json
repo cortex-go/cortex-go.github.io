@@ -19,8 +19,6 @@
     "templates/template.html"
   ],
   "reqs": [
-    "public/assets/css/style.css",
-    "public/assets/js/script.js",
     "public/docs.html",
     "public/docs/agent.html",
     "public/docs/battle-tested.html",
