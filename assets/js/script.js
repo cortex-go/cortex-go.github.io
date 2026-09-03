@@ -101,15 +101,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(box.querySelector('.copy-code'))continue;
     const source=box.querySelector('code,.code-line,.terminal-code')||box;
     const button=document.createElement('button');
-    button.type='button';button.className='copy-code';button.textContent='Copy';
+    button.type='button';button.className='copy-code';button.setAttribute('aria-label','Copy code');button.title='Copy code';button.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>';
     button.addEventListener('click',async()=>{
       try{
         await navigator.clipboard.writeText(cortexCopyText(source));
-        button.textContent='Copied';
-        setTimeout(()=>button.textContent='Copy',1200);
+        button.setAttribute('aria-label','Copied');
+        setTimeout(()=>button.setAttribute('aria-label','Copy code'),1200);
       }catch{
-        button.textContent='Failed';
-        setTimeout(()=>button.textContent='Copy',1200);
+        button.setAttribute('aria-label','Copy failed');
+        setTimeout(()=>button.setAttribute('aria-label','Copy code'),1200);
       }
     });
     box.append(button);
