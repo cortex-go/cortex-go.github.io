@@ -98,8 +98,15 @@ document.addEventListener('DOMContentLoaded',()=>{
   cortexInitMobileMenu();
   const targets=[...document.querySelectorAll('.docs article pre, .code-card, .install-card')];
   for(const box of targets){
-    if(box.querySelector('.copy-code'))continue;
+    if(box.querySelector('.copy-code')||box.parentElement?.classList.contains('code-copy-shell'))continue;
     const source=box.querySelector('code,.code-line,.terminal-code')||box;
+    let controls=box;
+    if(box.matches('pre')){
+      controls=document.createElement('div');
+      controls.className='code-copy-shell';
+      box.before(controls);
+      controls.append(box);
+    }
     const button=document.createElement('button');
     button.type='button';button.className='copy-code';button.setAttribute('aria-label','Copy code');button.title='Copy code';button.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>';
     button.addEventListener('click',async()=>{
@@ -112,6 +119,6 @@ document.addEventListener('DOMContentLoaded',()=>{
         setTimeout(()=>button.setAttribute('aria-label','Copy code'),1200);
       }
     });
-    box.append(button);
+    controls.append(button);
   }
 });
