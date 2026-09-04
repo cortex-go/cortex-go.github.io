@@ -287,3 +287,12 @@ Then read feature documentation only when the task requires it, for example:
 - integration with other application stacks.
 
 Prefer documented Nift behaviour and the existing project structure over guessing based on another website generator or framework.
+# Release-script deployment
+
+`content/install.sh`, `content/download.sh`, and `content/update.sh` are the
+editable public release scripts. Build with the repository-approved Nift,
+commit generated `public/` first, then commit the source repository and its
+updated gitlink. Before any Cortex tag is pushed, deploy the site, fetch all
+three scripts from `https://crtx.dev`, compare exact bytes with generated
+output, run `sh -n`, and exercise them against release fixtures. Never publish
+an application tag while changed installer bytes are not yet live.
