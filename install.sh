@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-repo="cortex-go/cortex"
+repo="crtx-dev/cortex"
 mode="user"
 
 usage() {
@@ -44,7 +44,7 @@ if [ "$mode" = "system" ]; then
   fi
   if [ "$(id -u)" -ne 0 ]; then
     echo "Cortex installer: --system installs to /usr/local/bin and requires root." >&2
-    echo "Run: curl -fsSL https://cortex-go.github.io/install.sh | sudo sh -s -- --system" >&2
+    echo "Run: curl -fsSL https://crtx.dev/install.sh | sudo sh -s -- --system" >&2
     exit 1
   fi
   install_dir="/usr/local/bin"
